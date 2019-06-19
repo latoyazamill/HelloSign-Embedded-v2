@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>HelloSign Electronic Signature Ticket</title>
+    <script type="text/javascript" src="https://unpkg.com/hellosign-embedded@next/umd/embedded.development.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+
+    <script type="text/babel">
+      class WindowDemo extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            client_id: '',
+            sign_or_template_url: '',
+            skip_domain_verification: false,
+            redirect_url: '',
+            container: false,
+          };
+
+          this.handleChange = this.handleChange.bind(this);
+          this.signDocument = this.signDocument.bind(this);
+        };
+
+        handleChange(event) {
+          var target = event.target;
+          var name = event.target.name;
+          var value = target.type === 'checkbox' ? target.checked : target.value;
+
+          this.setState({
+            [name]: value
+          });
+        };
+
+        signDocument(event) {
+          event.preventDefault()
+          var client_id = this.state.client_id;
+          var sign_or_template_url = this.state.sign_or_template_url;
+          var skip_domain_verification = this.state.skip_domain_verification;
+          //var redirect_url = this.state.redirect_url;
+          //var contained = this.state.container;
+          //var redirect = 'http://www.checkembedded.com';
+
+          const client = new window.HelloSign({
+            clientId: client_id,
+            debug: true,
+            uxVersion: 2,
+            skipDomainVerification: skip_domain_verification,
+            //redirectTo: redirect_url,
+          });
+
+          client.open(sign_or_template_url, {
+            allowCancel: false,
+            debug: true,
+          });
+
+          client.on('close', (evt) => {
+            console.log('The signature request was closed', evt);
+          });
+
+          client.on('createTemplate', (data) => {
+            console.log(`The signature request template "${data.title}" was created!`);
+            console.log(`The signature request message "${data.message}" was created!`);
+          });
+
+          client.on('decline', (data) => {
+            console.log(`The signature request "${data.signatureId}" was declined because "${data.reason}"`);
+          });
+
+          client.on('error', (data) => {
+            console.log('Something went wrong! Please try again.');
+
+            client.close();
+          });
+
+          client.on('reassign', (data) => {
+            console.log(`The signature request was reassigned to ${data.email} because "${data.reason}"`);
+          });
+
+          client.on('send', (data) => {
+            console.log('The signature request was sent!');
+          });
+
+          client.on('sign', (data) => {
+            console.log("What is the data?", data);
+            console.log(`The signature request with the signatureId "${data.signatureId}" was signed!`);
+          });
+
+        };
+
+        render() {
+          return (
+          <div>
+            <div>
+              <h1>ReactJS Frontend Tester Page: Version 2</h1>
+            </div>
+
+            <form onSubmit={this.signDocument}>
+              <div>
+                <label>
+                  Enter your client_id here:
+                  <input name="client_id" type="text" value={this.state.client_id} onChange={this.handleChange}/>
+                </label>
+              </div>
+
+              <div>
+                <label>
+                  Enter your sign/claim/template url here:
+                  <input name="sign_or_template_url" type="text" value={this.state.sign_or_template_url} onChange={this.handleChange} />
+                </label>
+              </div>
+
+              <div>
+                <label>
+                  Close and redirect?
+                  <input name="redirect_url" type="checkbox" checked={this.state.redirect_url} onChange={this.handleChange} />
+                </label>
+              </div>
+
+              <div>
+                <label>
+                  Skip domain verification?
+                  <input name="skip_domain_verification" type="checkbox" checked={this.state.skip_domain_verification} onChange={this.handleChange} />
+                </label>
+              </div>
+
+              <div>
+                <label>
+                  Close modal and open container?
+                  <input name="container" type="checkbox" checked={this.state.container} onChange={this.handleChange} />
+                </label>
+              </div>
+
+              <input type="submit" value="signDocument" />
+            </form>
+          </div>
+          )
+        }
+      };
+
+      ReactDOM.render(
+        <WindowDemo />,
+        document.getElementById('root')
+      );
+
+    </script>
+    <div id="myHSContainer"></div>
+  </body>
+</html>
